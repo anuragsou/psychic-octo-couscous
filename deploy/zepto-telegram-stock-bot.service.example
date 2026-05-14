@@ -1,0 +1,18 @@
+[Unit]
+Description=Zepto Telegram Stock Bot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/zepto-telegram-stock-bot
+Environment=NODE_ENV=production
+Environment=HEADLESS=true
+ExecStart=/usr/bin/npm start
+Restart=always
+RestartSec=15
+User=zeptobot
+Group=zeptobot
+
+[Install]
+WantedBy=multi-user.target
