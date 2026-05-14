@@ -1,0 +1,6 @@
+.env
+.browser-profile/
+.state/
+.debug/
+node_modules/
+npm-debug.log*

@@ -1,0 +1,20 @@
+services:
+  zepto-stock-bot:
+    build: .
+    container_name: zepto-stock-bot
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      HEADLESS: "true"
+      BROWSER_PROFILE_DIR: /app/.browser-profile
+    volumes:
+      - zepto_browser_profile:/app/.browser-profile
+      - zepto_state:/app/.state
+      - zepto_debug:/app/.debug
+
+volumes:
+  zepto_browser_profile:
+  zepto_state:
+  zepto_debug:

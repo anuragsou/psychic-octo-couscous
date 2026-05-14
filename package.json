@@ -1,0 +1,22 @@
+{
+  "name": "zepto-telegram-stock-bot",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Telegram bot that tracks stock and available quantity for one Zepto product at one pincode.",
+  "type": "commonjs",
+  "main": "src/index.js",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "check:once": "node -e \"process.env.RUN_ONCE='true'; require('./src/index.js')\"",
+    "setup:location": "node -e \"process.env.HEADLESS='false'; process.env.RUN_ONCE='true'; require('./src/index.js')\"",
+    "telegram:chat-id": "node scripts/get-chat-id.js",
+    "lint": "node -e \"const fs=require('fs'),vm=require('vm'),path=require('path');let n=0;for(const d of ['src','scripts'])for(const f of fs.readdirSync(d))if(f.endsWith('.js')){const p=path.join(d,f);new vm.Script(fs.readFileSync(p,'utf8'),{filename:p});n++;}JSON.parse(fs.readFileSync('package.json','utf8'));console.log('Syntax OK ('+n+' JS files).')\""
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "puppeteer": "^24.1.1"
+  }
+}
