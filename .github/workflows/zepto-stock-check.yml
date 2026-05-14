@@ -1,0 +1,58 @@
+name: Zepto Stock Check
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/30 * * * *"
+
+concurrency:
+  group: zepto-stock-check
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    env:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      ZEPTO_PRODUCT_URL: https://www.zepto.com/pn/abhi-vit-d3-white-eggs-with-immunity-boosters/pvid/e2b2c19f-1eca-4900-9c9e-c997ac193fdb
+      ZEPTO_PINCODE: "382449"
+      ZEPTO_LOCATION_TEXT: New Maninagar 382449
+      CHECK_INTERVAL_SECONDS: "300"
+      NOTIFY_ON_EVERY_CHECK: "false"
+      LOW_STOCK_THRESHOLD: "3"
+      ENABLE_CART_QUANTITY_PROBE: "true"
+      MAX_QUANTITY_PROBE: "30"
+      RUN_ONCE: "true"
+      HEADLESS: "true"
+      ENABLE_TELEGRAM_COMMANDS: "false"
+      DEBUG: "false"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Restore stock state
+        uses: actions/cache@v4
+        with:
+          path: .state
+          key: zepto-stock-state-${{ github.run_id }}
+          restore-keys: |
+            zepto-stock-state-
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check syntax
+        run: npm run lint
+
+      - name: Run one stock check
+        run: npm run check:once
