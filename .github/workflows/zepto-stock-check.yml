@@ -3,6 +3,8 @@ name: Zepto Stock Check
 on:
   workflow_dispatch:
   schedule:
+    # GitHub runners are sometimes blocked by Zepto. The bot skips blocked runs
+    # without updating state, so only successful product-page loads can alert.
     - cron: "*/30 * * * *"
 
 concurrency:
@@ -29,6 +31,7 @@ jobs:
       HEADLESS: "true"
       ENABLE_TELEGRAM_COMMANDS: "false"
       DEBUG: "false"
+      NOTIFY_ON_BLOCKED_ERROR: "false"
 
     steps:
       - name: Checkout
