@@ -24,6 +24,17 @@ function log(message) {
   console.log(`[${new Date().toISOString()}] ${message}`);
 }
 
+function isBlockedByZepto(error) {
+  const text = `${error?.name || ""}\n${error?.message || ""}\n${error?.stack || ""}`;
+  return /HTTP 403|403 ERROR|Zepto blocked|access denied|request blocked/i.test(text);
+}
+
+function isBlockedSnapshot(snapshot) {
+  if (!snapshot) return false;
+  const text = `${snapshot.productName || ""}\n${snapshot.source || ""}`;
+  return /403\s*ERROR|access denied|request blocked/i.test(text);
+}
+
 async function runCheck({ forceNotify = false, chatId = config.telegramChatId } = {}) {
   if (checking) {
     await telegram.sendMessage("A Zepto stock check is already running.", chatId);
@@ -32,8 +43,13 @@ async function runCheck({ forceNotify = false, chatId = config.telegramChatId } 
 
   checking = true;
   try {
-    const previous = lastSnapshot || (await readState(config.stateFile));
+    let previous = lastSnapshot || (await readState(config.stateFile));
     const current = await checkZeptoStock(config);
+    if (isBlockedSnapshot(previous)) {
+      log("Ignoring previously cached blocked/403 stock snapshot.");
+      previous = current;
+    }
+
     lastSnapshot = current;
     await writeState(config.stateFile, current);
 
@@ -49,6 +65,11 @@ async function runCheck({ forceNotify = false, chatId = config.telegramChatId } 
 
     return current;
   } catch (error) {
+    if (isBlockedByZepto(error) && !config.notifyOnBlockedError) {
+      log(`Zepto blocked this run; keeping previous stock state and skipping Telegram alert. ${error.message}`);
+      return lastSnapshot || (await readState(config.stateFile));
+    }
+
     const message = `Zepto tracker error\n${error.stack || error.message}`;
     log(message);
     await telegram.sendMessage(message.slice(0, 3900), chatId).catch((telegramError) => {
