@@ -517,6 +517,19 @@ function expandRect(rect) {
   };
 }
 
+async function assertPageNotBlocked(page, response, stage) {
+  const status = response?.status?.() || 0;
+  const pageTitle = await page.title().catch(() => "");
+  const bodyText = await page.evaluate(() => document.body.innerText.slice(0, 500)).catch(() => "");
+
+  if (status === 403 || /403\s*error|access\s*denied|request\s*blocked/i.test(`${pageTitle}\n${bodyText}`)) {
+    throw new Error(
+      `Zepto blocked this browser/server with HTTP 403 during ${stage}. ` +
+        "This usually happens on cloud runners such as GitHub Actions. Run the bot from your PC, a phone, or a VM/IP that Zepto allows."
+    );
+  }
+}
+
 async function readMainCartQuantity(page, actionRect) {
   return page.evaluate((rect) => {
     const box = {
@@ -791,7 +804,11 @@ async function checkZeptoStock(config) {
     );
 
     const jsonResponses = await captureJsonResponses(page);
-    await page.goto(config.productUrl, { waitUntil: "domcontentloaded", timeout: config.navigationTimeoutMs });
+    const firstResponse = await page.goto(config.productUrl, {
+      waitUntil: "domcontentloaded",
+      timeout: config.navigationTimeoutMs
+    });
+    await assertPageNotBlocked(page, firstResponse, "initial product page load");
     await page.waitForNetworkIdle({ idleTime: 1200, timeout: 20000 }).catch(() => {});
 
     const locationResult = await applyLocation(page, {
@@ -799,7 +816,11 @@ async function checkZeptoStock(config) {
       locationText: config.locationText
     });
     const responseStartIndex = jsonResponses.length;
-    await page.goto(config.productUrl, { waitUntil: "domcontentloaded", timeout: config.navigationTimeoutMs });
+    const productResponse = await page.goto(config.productUrl, {
+      waitUntil: "domcontentloaded",
+      timeout: config.navigationTimeoutMs
+    });
+    await assertPageNotBlocked(page, productResponse, "product page reload");
     await page.waitForNetworkIdle({ idleTime: 1200, timeout: 25000 }).catch(() => {});
     await sleep(2500);
 
