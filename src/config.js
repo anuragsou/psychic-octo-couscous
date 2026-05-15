@@ -36,6 +36,7 @@ function loadConfig() {
     navigationTimeoutMs: intEnv("NAVIGATION_TIMEOUT_MS", 60000, 10000),
     enableTelegramCommands: boolEnv("ENABLE_TELEGRAM_COMMANDS", true),
     debug: boolEnv("DEBUG", false),
+    notifyOnBlockedError: boolEnv("NOTIFY_ON_BLOCKED_ERROR", false),
     stateFile: path.resolve(rootDir, ".state", "last-stock.json"),
     debugDir: path.resolve(rootDir, ".debug")
   };
